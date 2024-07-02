@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 const initialFriends = [
   {
     id: 118836,
@@ -20,74 +22,121 @@ const initialFriends = [
 ];
 
 
+
+
 export default function App() {
+  const [selectValue, setSelectValue] = useState("Clark");
+  const [partner,setPartner] = useState("You");
+  const [val, setVal] = useState(0);
+  const [splitClicked, setSplitClicked] = useState(false);
+  const [addFriend, setAddFriend] = useState(true);
+  const [friendForm, setFriendForm] = useState(false);
+
   return (
     <div className="app">
        <div className="sidebar">
-         <FriendList/>
-         {/* <button className="button">Add Friend</button> */}
-         <AddFriend/>
+         <FriendList val={val}  selectValue= {selectValue} setSelectValue={setSelectValue} partner={partner} splitClicked={splitClicked} setSplitClicked={setSplitClicked}/>
+
+       {
+          addFriend &&  <button className="button" onClick={()=>{setFriendForm(true); setAddFriend(false)}}>Add Friend</button>
+       }
+         
+         {
+          friendForm && <AddFriend setFriendForm={setFriendForm} setAddFriend={setAddFriend}/>
+         }
+         
        </div>
-       <SplitBill/>
+      {
+        splitClicked &&
+          <SplitBill val={val} setVal={setVal} selectValue= {selectValue} setSelectValue={setSelectValue} setPartner={setPartner} partner={partner} setSplitClicked={setSplitClicked}/> 
+      }
+       
     </div>
   )
 }
 
-function FriendList() {
+function FriendList({selectValue, setSelectValue, partner, val, setSplitClicked}) {
   const friendList = initialFriends;
   return <ul> 
      {
-     friendList.map((friend)=> (<Friend friend={friend} key={friend.id}/>))
+     friendList.map((friend)=> (<Friend friend={friend} key={friend.id} val={val} selectValue= {selectValue} setSelectValue={setSelectValue} partner={partner} setSplitClicked={setSplitClicked}/>))
      }
   </ul>
 }
 
-function Friend({friend}) {
-     return <li>
-          <img src={friend.image}/>
+function Friend({friend,selectValue, setSelectValue, partner, val, setSplitClicked}) {
+  
+     return <>
+     
+     <li>
+          <img src={friend.image} alt="friend_image"/>
           <h3>{friend.name}</h3>
-          <button className="button">Select</button>
-     </li>
-    
+          <button className="button" onClick={()=>{setSelectValue(friend.name); setSplitClicked(true)}}>Select</button>
+          {/* {console.log(selectValue)} */}
+
+
+          {   friend.name === selectValue &&
+             (partner ==="You" ? <p>{friend.name} owe you ${val} </p> : <p> you owe {friend.name} ${val} </p>)
+          }     
+     </li> 
+     </>
 }
 
-function AddFriend() {
+function AddFriend({setFriendForm, setAddFriend}) {
    return  <div>
-      <form>
-             <div>
-              Friend name
+      <form className="form-add-friend">
+    
+              <label>Friend name</label>
               <input type="text"/>
-              </div><br/>
-             <div>
-              Image URL
+              <label>Image URL</label>
               <input type="text"/>
-              </div><br/>
+
              <button className="button">Add</button>
-            
        </form>
-       <button className="button">Add</button>
+       <button className="button" onClick={()=>{setFriendForm(false); setAddFriend(true)}}>Close</button>
    </div>
    
 }
 
-function SplitBill() {
-   return <form>
-      <h2>SPLIT A BILL WITH ANTHONY</h2>
-      <br/>
-          <div>
+function SplitBill({selectValue, setSelectValue, partner, setPartner, setVal, val, setSplitClicked}) {
+  const [bill, setBill] = useState(0);
+  const [yourExp, setYourExp] = useState(0);
+
+  
+
+  function handlebill(value) {
+      setVal(value);
+      console.log(val);
+  }
+ 
+  function handleSubmit(e) {
+      e.preventDefault();
+      const formData = new FormData(e.target)
+       const value = formData.get("inputName");
+      setVal(value)
+      setSplitClicked(false);
+
+  }
+
+   return <form className="form-split-bill" onSubmit={handleSubmit}>
+  {/* {console.log(selectValue)} */}
+      <h2>SPLIT A BILL WITH {selectValue}</h2>
           <label>Bill value</label>   
-          <input type="text"/>
-          </div>
-          <br/>
-          <div>Bill value  <input type="text"/>
-          </div>
-          <br/>
-          <div>Bill value  <input type="text"/>
-          </div>
-          <br/>
-          <div>Bill value  <input type="text"/>
-          </div>
-          <br/>
-          <button className="button">Splitbill</button>
+          <input type="text" value={bill} onChange={(e)=>setBill(Number(e.target.value))}/>
+
+          <label>Your expense</label> 
+          <input type="text" value={yourExp} onChange={(e)=>setYourExp(Number(e.target.value))}/>
+  
+          <label>{selectValue} expense</label>
+          <input type="text" value={bill-yourExp} name="inputName"/>
+        
+          <label>Who is paying the bill?</label>  
+            <select onChange={(e)=>setPartner(e.target.value)}>
+              {/* {console.log(partner)} */}
+               <option value="You">You</option>
+               <option value={selectValue}>{selectValue}</option>
+            </select>
+
+          <button className="button" type="submit">Splitbill</button>
       </form>
 }
